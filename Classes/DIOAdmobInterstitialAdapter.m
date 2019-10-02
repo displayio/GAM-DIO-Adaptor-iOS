@@ -10,7 +10,7 @@
 
 #import <DIOSDK/DIOController.h>
 
-@import GoogleMobileAds;
+#import <GoogleMobileAds/GoogleMobileAds.h>
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
