@@ -1,12 +1,12 @@
 //
-//  DIOAdmobBannerAdapter.m
+//  DIOAdmobInFeedAdapter.m
 //  AdmobAdapterForiOS
 //
 //  Created by Ariel Malka on 7/16/19.
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobBannerAdapter.h"
+#import "DIOAdmobInFeedAdapter.h"
 
 #import <DIOSDK/DIOController.h>
 
@@ -14,11 +14,11 @@
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
-@interface DIOAdmobBannerAdapter () <GADCustomEventBanner>
+@interface DIOAdmobInFeedAdapter () <GADCustomEventBanner>
 
 @end
 
-@implementation DIOAdmobBannerAdapter
+@implementation DIOAdmobInFeedAdapter
 
 @synthesize delegate;
 
@@ -28,8 +28,17 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
         [self.delegate customEventBanner:self didFailAd:error];
         return;
     }
+    
+    [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
 
-    DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:serverParameter];
+    DIOPlacement *placement;
+    @try {
+        placement = [[DIOController sharedInstance] placementWithId:serverParameter];
+    } @catch (NSException *exception) {
+        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInvalidArgument userInfo:nil];
+        [self.delegate customEventBanner:self didFailAd:error];
+        return;
+    }
     
     /*
      * Hack to handle automatic refresh

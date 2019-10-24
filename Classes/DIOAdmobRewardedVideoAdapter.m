@@ -92,34 +92,39 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
         return;
     }
     
+    [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
+    
+    DIOPlacement *placement;
     @try {
-        DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:self.placementID];
-        DIOAdRequest *request = [placement newAdRequest];
-        
-        [request requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
-            NSLog(@"AD RECEIVED");
-            
-            [adProvider loadAdWithLoadedHandler:^(DIOAd *ad) {
-                NSLog(@"AD LOADED");
-                
-                self.ad = ad;
-                [self.rewardBasedVideoAdConnector adapterDidReceiveRewardBasedVideoAd:self];
-            } failedHandler:^(NSString *message){
-                NSLog(@"AD FAILED TO LOAD: %@", message);
-                
-                NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
-            [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
-            }];
-        } noAdHandler:^{
-            NSLog(@"NO AD");
-            
-            NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorNoFill userInfo:nil];
-            [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
-        }];
+        placement = [[DIOController sharedInstance] placementWithId:self.placementID];
     } @catch (NSException *exception) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInvalidArgument userInfo:nil];
         [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
+        return;
     }
+
+    DIOAdRequest *request = [placement newAdRequest];
+
+    [request requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
+        NSLog(@"AD RECEIVED");
+        
+        [adProvider loadAdWithLoadedHandler:^(DIOAd *ad) {
+            NSLog(@"AD LOADED");
+            
+            self.ad = ad;
+            [self.rewardBasedVideoAdConnector adapterDidReceiveRewardBasedVideoAd:self];
+        } failedHandler:^(NSString *message){
+            NSLog(@"AD FAILED TO LOAD: %@", message);
+            
+            NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
+        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
+        }];
+    } noAdHandler:^{
+        NSLog(@"NO AD");
+        
+        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorNoFill userInfo:nil];
+        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
+    }];
 }
 
 - (void)stopBeingDelegate {
