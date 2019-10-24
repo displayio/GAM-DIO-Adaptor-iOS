@@ -5,7 +5,7 @@
 
 Pod::Spec.new do |s|
     s.name             = 'AdMob-DIO-Adapters'
-    s.version          = '2.6.1'
+    s.version          = '2.7.0'
     s.summary          = 'DIO Adapters for mediating through AdMob.'
     s.homepage         = 'https://www.display.io/'
     s.license          = { :type => 'Apache-2.0', :file => 'LICENSE' }
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
     end
     s.subspec 'Network' do |ns|
         ns.source_files = 'Classes/*.{h,m}'
-        ns.dependency 'DIOSDK', '2.6.1'
+        ns.dependency 'DIOSDK', '2.7.0'
         ns.dependency 'Google-Mobile-Ads-SDK'
     end
 end
