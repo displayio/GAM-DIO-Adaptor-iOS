@@ -23,7 +23,7 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 @implementation DIOAdmobRewardedVideoAdapter
 
 + (NSString *)adapterVersion {
-    return @"2.7.0";
+    return @"2.8.0";
 }
 
 - (instancetype)initWithRewardBasedVideoAdNetworkConnector:(id<GADMRewardBasedVideoAdNetworkConnector>)connector {
@@ -94,10 +94,8 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
     
     [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
     
-    DIOPlacement *placement;
-    @try {
-        placement = [[DIOController sharedInstance] placementWithId:self.placementID];
-    } @catch (NSException *exception) {
+    DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:self.placementID];
+    if (!placement) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInvalidArgument userInfo:nil];
         [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
         return;

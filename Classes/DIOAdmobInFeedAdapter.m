@@ -31,10 +31,8 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
     
     [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
 
-    DIOPlacement *placement;
-    @try {
-        placement = [[DIOController sharedInstance] placementWithId:serverParameter];
-    } @catch (NSException *exception) {
+    DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:serverParameter];
+    if (!placement) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInvalidArgument userInfo:nil];
         [self.delegate customEventBanner:self didFailAd:error];
         return;
