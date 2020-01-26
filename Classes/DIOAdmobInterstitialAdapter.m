@@ -41,7 +41,6 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
     }
     
     DIOAdRequest *request2 = [placement newAdRequest];
-    [request2 setKeywords:request.userKeywords];
     
     [request2 requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
         NSLog(@"AD RECEIVED");
@@ -50,17 +49,17 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
             NSLog(@"AD LOADED");
             self.ad = ad;
             [self.delegate customEventInterstitialDidReceiveAd:self];
-        } failedHandler:^(NSString *message){
-            NSLog(@"AD FAILED TO LOAD: %@", message);
+        } failedHandler:^(NSError *error){
+            NSLog(@"AD FAILED TO LOAD: %@", error.localizedDescription);
             
-            NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
-            [self.delegate customEventInterstitial:self didFailAd:error];
+            NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
+            [self.delegate customEventInterstitial:self didFailAd:error1];
         }];
-    } noAdHandler:^{
-        NSLog(@"NO AD");
+    } noAdHandler:^(NSError *error){
+        NSLog(@"NO AD: %@", error.localizedDescription);
         
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorMediationNoFill userInfo:nil];
-        [self.delegate customEventInterstitial:self didFailAd:error];
+        NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorMediationNoFill userInfo:nil];
+        [self.delegate customEventInterstitial:self didFailAd:error1];
     }];
 }
 

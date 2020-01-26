@@ -111,17 +111,17 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
             
             self.ad = ad;
             [self.rewardBasedVideoAdConnector adapterDidReceiveRewardBasedVideoAd:self];
-        } failedHandler:^(NSString *message){
-            NSLog(@"AD FAILED TO LOAD: %@", message);
+        } failedHandler:^(NSError *error){
+            NSLog(@"AD FAILED TO LOAD: %@", error.localizedDescription);
             
-            NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
-        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
+            NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
+            [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error1];
         }];
-    } noAdHandler:^{
-        NSLog(@"NO AD");
+    } noAdHandler:^(NSError *error){
+        NSLog(@"NO AD: %@", error.localizedDescription);
         
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorNoFill userInfo:nil];
-        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
+        NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorNoFill userInfo:nil];
+        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error1];
     }];
 }
 

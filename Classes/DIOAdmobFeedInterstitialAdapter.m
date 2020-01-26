@@ -1,24 +1,25 @@
 //
-//  DIOAdmobMediumRectangleAdapter.m
+//  DIOAdmobFeedInterstitialAdapter.m
 //  AdmobAdapterForiOS
 //
-//  Created by Ariel Malka on 12/17/19.
+//  Created by Ariel Malka on 12/22/19.
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobMediumRectangleAdapter.h"
+#import "DIOAdmobFeedInterstitialAdapter.h"
 
 #import <DIOSDK/DIOController.h>
+#import <DIOSDK/DIOFeedInterstitialContainer.h>
 
 #import <GoogleMobileAds/GoogleMobileAds.h>
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
-@interface DIOAdmobMediumRectangleAdapter () <GADCustomEventBanner>
+@interface DIOAdmobFeedInterstitialAdapter () <GADCustomEventBanner>
 
 @end
 
-@implementation DIOAdmobMediumRectangleAdapter
+@implementation DIOAdmobFeedInterstitialAdapter
 
 @synthesize delegate;
 
@@ -48,26 +49,19 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
     
     DIOAdRequest *request2 = [placement newAdRequest];
     
-    [request2 requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
-        NSLog(@"AD RECEIVED");
+    DIOFeedInterstitialContainer *container = [[DIOFeedInterstitialContainer alloc] init];
+    
+    [container loadWithAdRequest:request2 completionHandler:^(DIOAd *ad){
+        NSLog(@"AD LOADED");
+    } errorHandler:^(NSError *error) {
+        NSLog(@"AD FAILED TO LOAD: %@", error.localizedDescription);
         
-        [adProvider loadAdWithLoadedHandler:^(DIOAd *ad) {
-            NSLog(@"AD LOADED");
-
-            [ad view].frame = CGRectMake(0, 0, adSize.size.width, adSize.size.height);
-            [self.delegate customEventBanner:self didReceiveAd:[ad view]];
-        } failedHandler:^(NSError *error){
-            NSLog(@"AD FAILED TO LOAD: %@", error.localizedDescription);
-            
-            NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
-            [self.delegate customEventBanner:self didFailAd:error1];
-        }];
-    } noAdHandler:^(NSError *error){
-        NSLog(@"NO AD: %@", error.localizedDescription);
-        
-        NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorMediationNoFill userInfo:nil];
+        NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
         [self.delegate customEventBanner:self didFailAd:error1];
     }];
+    
+    [container view].frame = CGRectMake(0, 0, adSize.size.width, adSize.size.height);
+    [self.delegate customEventBanner:self didReceiveAd:[container view]];
 }
 
 @end
