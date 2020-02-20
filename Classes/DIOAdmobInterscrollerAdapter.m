@@ -1,25 +1,25 @@
 //
-//  DIOAdmobFeedInterstitialAdapter.m
+//  DIOAdmobInterscrollerAdapter.m
 //  AdmobAdapterForiOS
 //
 //  Created by Ariel Malka on 12/22/19.
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobFeedInterstitialAdapter.h"
+#import "DIOAdmobInterscrollerAdapter.h"
 
 #import <DIOSDK/DIOController.h>
-#import <DIOSDK/DIOFeedInterstitialContainer.h>
+#import <DIOSDK/DIOInterscrollerContainer.h>
 
 #import <GoogleMobileAds/GoogleMobileAds.h>
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
-@interface DIOAdmobFeedInterstitialAdapter () <GADCustomEventBanner>
+@interface DIOAdmobInterscrollerAdapter () <GADCustomEventBanner>
 
 @end
 
-@implementation DIOAdmobFeedInterstitialAdapter
+@implementation DIOAdmobInterscrollerAdapter
 
 @synthesize delegate;
 
@@ -49,7 +49,7 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
     
     DIOAdRequest *request2 = [placement newAdRequest];
     
-    DIOFeedInterstitialContainer *container = [[DIOFeedInterstitialContainer alloc] init];
+    DIOInterscrollerContainer *container = [[DIOInterscrollerContainer alloc] init];
     
     [container loadWithAdRequest:request2 completionHandler:^(DIOAd *ad){
         NSLog(@"AD LOADED");

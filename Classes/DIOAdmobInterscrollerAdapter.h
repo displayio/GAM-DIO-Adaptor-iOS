@@ -1,5 +1,5 @@
 //
-//  DIOAdmobFeedInterstitialAdapter.h
+//  DIOAdmobInterscrollerAdapter.h
 //  AdmobAdapterForiOS
 //
 //  Created by Ariel Malka on 12/22/19.
@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DIOAdmobFeedInterstitialAdapter : NSObject
+@interface DIOAdmobInterscrollerAdapter : NSObject
 
 @end
 
