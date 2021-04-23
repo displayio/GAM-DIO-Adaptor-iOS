@@ -12,7 +12,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DIOAdmobRewardedVideoAdapter : NSObject <GADMRewardBasedVideoAdNetworkAdapter>
+@interface DIOAdmobRewardedVideoAdapter : NSObject <GADMediationAdapter>
 
 @end
 

@@ -31,7 +31,7 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
     }
     
     [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
-
+    
     DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:serverParameter];
     if (!placement) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInvalidArgument userInfo:nil];
@@ -43,25 +43,59 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
      * Hack to handle automatic refresh
      */
     if ([placement hasPendingAdRequests]) {
-        [[[placement lastAdRequest].adProvider.ad view] removeFromSuperview];
-        [[placement lastAdRequest].adProvider.ad finish];
+        DIOInterscrollerView *interScrollerView = [[[[placement lastAdRequest].adProvider.ad view] superview] superview];
+        if (interScrollerView == nil || [[placement lastAdRequest].adProvider.ad impressed]) {
+            [[placement lastAdRequest].adProvider.ad finish];
+            [self requestDioAd:adSize placement:placement];
+        } else {
+            interScrollerView.frame = CGRectMake(0, 0, adSize.size.width, adSize.size.height);
+            [self.delegate customEventBanner:self didReceiveAd:interScrollerView];
+        }
+        
+    } else {
+        [self requestDioAd:adSize placement:placement];
     }
     
+}
+
+- (void)requestDioAd:(GADAdSize)adSize placement:(DIOPlacement *)placement {
     DIOAdRequest *request2 = [placement newAdRequest];
     
     DIOInterscrollerContainer *container = [[DIOInterscrollerContainer alloc] init];
     
     [container loadWithAdRequest:request2 completionHandler:^(DIOAd *ad){
         NSLog(@"AD LOADED");
+        [container view].frame = CGRectMake(0, 0, adSize.size.width, adSize.size.height);
+        [self.delegate customEventBanner:self didReceiveAd:[container view]];
     } errorHandler:^(NSError *error) {
         NSLog(@"AD FAILED TO LOAD: %@", error.localizedDescription);
-        
         NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
         [self.delegate customEventBanner:self didFailAd:error1];
     }];
-    
-    [container view].frame = CGRectMake(0, 0, adSize.size.width, adSize.size.height);
-    [self.delegate customEventBanner:self didReceiveAd:[container view]];
 }
+
++ (DIOInterscrollerView*)getInterscrollerViewForTableView:(GADBannerView*)bannerView withInterscrollerSize:(CGSize)interscrollerSize withBaseSize:(GADAdSize)baseSize {
+    
+    DIOInterscrollerView *dioView = bannerView.subviews[0].subviews[0].subviews[0].subviews[0];
+    if (dioView != nil &&  [dioView isKindOfClass:[DIOInterscrollerView class]] ) {
+        bannerView.adSize = GADAdSizeFromCGSize(interscrollerSize);
+    } else {
+        bannerView.adSize = baseSize;
+    }
+    return dioView;
+}
+
++ (DIOInterscrollerView*)getInterscrollerViewForScrollView:(GADBannerView*)bannerView withInterscrollerSize:(CGSize)interscrollerSize withBaseSize:(GADAdSize)baseSize {
+    
+    DIOInterscrollerView *dioView = bannerView.subviews[0].subviews[0].subviews[0].subviews[0];
+    if (dioView != nil &&  [dioView isKindOfClass:[DIOInterscrollerView class]] ) {
+        bannerView.adSize = GADAdSizeFromCGSize(interscrollerSize);
+        [dioView setConstraintForScrollView];
+    } else {
+        bannerView.adSize = baseSize;
+    }
+    return dioView;
+}
+
 
 @end

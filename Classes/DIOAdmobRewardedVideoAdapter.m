@@ -11,84 +11,52 @@
 #import <DIOSDK/DIOController.h>
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
+static NSString *const versionString = @"4.5.1";
 
-@interface DIOAdmobRewardedVideoAdapter () <GADMRewardBasedVideoAdNetworkAdapter>
+
+@interface DIOAdmobRewardedVideoAdapter () <GADMediationAdapter>
 
 @property (nonatomic, strong) DIOAd *ad;
 @property (nonatomic, strong) NSString *placementID;
-@property (nonatomic, weak) id<GADMRewardBasedVideoAdNetworkConnector> rewardBasedVideoAdConnector;
+@property(nonatomic, weak) id<GADMediationRewardedAdEventDelegate> delegate;
 
 @end
 
 @implementation DIOAdmobRewardedVideoAdapter
 
-+ (NSString *)adapterVersion {
-    return @"2.8.0";
-}
-
-- (instancetype)initWithRewardBasedVideoAdNetworkConnector:(id<GADMRewardBasedVideoAdNetworkConnector>)connector {
-    if (!connector) {
-        return nil;
++ (GADVersionNumber)adapterVersion {
+    NSArray *versionComponents = [versionString componentsSeparatedByString:@"."];
+    GADVersionNumber version = {0};
+    if (versionComponents.count >= 3) {
+        version.majorVersion = [versionComponents[0] integerValue];
+        version.minorVersion = [versionComponents[1] integerValue];
+        version.patchVersion = [versionComponents[2] integerValue];
+        
     }
-
-    if (self = [super init]) {
-        self.rewardBasedVideoAdConnector = connector;
-        self.placementID = [connector.credentials objectForKey:GADCustomEventParametersServer];
-    }
-    
-    return self;
+    return version;
 }
-
-- (void)setUp {
-    [self.rewardBasedVideoAdConnector adapterDidSetUpRewardBasedVideoAd:self];
++ (GADVersionNumber)adSDKVersion {
+    NSArray *versionComponents = [versionString componentsSeparatedByString:@"."];
+    GADVersionNumber version = {0};
+    if (versionComponents.count >= 3) {
+        version.majorVersion = [versionComponents[0] integerValue];
+        version.minorVersion = [versionComponents[1] integerValue];
+        version.patchVersion = [versionComponents[2] integerValue];
+    }
+    return version;
 }
 
 + (Class<GADAdNetworkExtras>)networkExtrasClass {
     return nil;
 }
 
-- (void)presentRewardBasedVideoAdWithRootViewController:(UIViewController *)viewController {
-    [self.ad showAdFromViewController:viewController eventHandler:^(DIOAdEvent event){
-        self.ad = nil;
-        
-        switch (event) {
-            case DIOAdEventOnShown:
-                NSLog(@"AdEventOnShown");
-                [self.rewardBasedVideoAdConnector adapterDidOpenRewardBasedVideoAd:self];
-                break;
-                
-            case DIOAdEventOnFailedToShow: {
-                NSLog(@"AdEventOnFailedToShow");
-                NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
-                [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
-                break;
-            }
-                
-            case DIOAdEventOnClicked:
-                NSLog(@"AdEventOnClicked");
-                [self.rewardBasedVideoAdConnector adapterDidGetAdClick:self];
-                break;
-                
-            case DIOAdEventOnClosed:
-                NSLog(@"AdEventOnClosed");
-                [self.rewardBasedVideoAdConnector adapterDidCloseRewardBasedVideoAd:self];
-                break;
-                
-            case DIOAdEventOnAdCompleted:
-                NSLog(@"AdEventOnAdCompleted");
-                
-                [self.rewardBasedVideoAdConnector adapterDidCompletePlayingRewardBasedVideoAd:self];
-                [self.rewardBasedVideoAdConnector adapter:self didRewardUserWithReward:nil];
-                
-                break;
-        }
-    }];
-}
-
-- (void)requestRewardBasedVideoAd { 
+- (void)loadRewardedInterstitialAdForAdConfiguration:(nonnull GADMediationRewardedAdConfiguration *)adConfiguration
+                                   completionHandler:(nonnull GADMediationRewardedLoadCompletionHandler) completionHandler{
+    
+    self.placementID = adConfiguration.credentials.settings[@"parameter"];
     if (![DIOController sharedInstance].initialized) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
-        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
+        completionHandler(nil, error);
         return;
     }
     
@@ -97,12 +65,12 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
     DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:self.placementID];
     if (!placement) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInvalidArgument userInfo:nil];
-        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error];
+        completionHandler(nil, error);
         return;
     }
-
+    
     DIOAdRequest *request = [placement newAdRequest];
-
+    
     [request requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
         NSLog(@"AD RECEIVED");
         
@@ -110,23 +78,59 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
             NSLog(@"AD LOADED");
             
             self.ad = ad;
-            [self.rewardBasedVideoAdConnector adapterDidReceiveRewardBasedVideoAd:self];
+            self.delegate = completionHandler(self, nil);
+            
         } failedHandler:^(NSError *error){
             NSLog(@"AD FAILED TO LOAD: %@", error.localizedDescription);
             
             NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorInternalError userInfo:nil];
-            [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error1];
+            completionHandler(nil, error1);
         }];
     } noAdHandler:^(NSError *error){
         NSLog(@"NO AD: %@", error.localizedDescription);
         
         NSError *error1 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorNoFill userInfo:nil];
-        [self.rewardBasedVideoAdConnector adapter:self didFailToLoadRewardBasedVideoAdwithError:error1];
+        completionHandler(nil, error1);
     }];
 }
 
-- (void)stopBeingDelegate {
-    // ???
+- (void)presentFromViewController:(nonnull UIViewController *)viewController {
+    [self.ad showAdFromViewController:viewController eventHandler:^(DIOAdEvent event){
+        self.ad = nil;
+        
+        switch (event) {
+            case DIOAdEventOnShown:
+                NSLog(@"AdEventOnShown");
+                [self.delegate willPresentFullScreenView];
+                [self.delegate reportImpression];
+                break;
+                
+            case DIOAdEventOnFailedToShow: {
+                NSLog(@"AdEventOnFailedToShow");
+                NSError *error3 = [NSError errorWithDomain:customEventErrorDomain code:kGADErrorNoFill userInfo:nil];
+                [self.delegate didFailToPresentWithError:error3];
+                break;
+            }
+                
+            case DIOAdEventOnClicked:
+                NSLog(@"AdEventOnClicked");
+                [self.delegate reportClick];
+                break;
+                
+            case DIOAdEventOnClosed:
+                NSLog(@"AdEventOnClosed");
+                [self.delegate willDismissFullScreenView];
+                [self.delegate didEndVideo];
+                [self.delegate didDismissFullScreenView];
+                break;
+                
+            case DIOAdEventOnAdCompleted:
+                NSLog(@"AdEventOnAdCompleted");
+                [self.delegate didEndVideo];
+                
+                break;
+        }
+    }];
 }
 
 @end
