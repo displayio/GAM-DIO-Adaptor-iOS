@@ -1,8 +1,8 @@
 //
-//  DIOAdmobBannerAdapter.h
+//  DIOAdmobInterstitialAdapter.h
 //  AdmobAdapterForiOS
 //
-//  Created by Ariel Malka on 12/17/19.
+//  Created by Ariel Malka on 7/10/19.
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DIOAdmobBannerAdapter : NSObject
+@interface DIOInterstitialAdapter : NSObject 
 
 @end
 

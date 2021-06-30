@@ -1,12 +1,12 @@
 //
-//  DIOAdmobBannerAdapter.m
+//  DIOAdmobMediumRectangleAdapter.m
 //  AdmobAdapterForiOS
 //
 //  Created by Ariel Malka on 12/17/19.
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobBannerAdapter.h"
+#import "DIOMediumRectangleAdapter.h"
 
 #import <DIOSDK/DIOController.h>
 
@@ -14,11 +14,11 @@
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
-@interface DIOAdmobBannerAdapter () <GADCustomEventBanner>
+@interface DIOMediumRectangleAdapter () <GADCustomEventBanner>
 
 @end
 
-@implementation DIOAdmobBannerAdapter
+@implementation DIOMediumRectangleAdapter
 
 @synthesize delegate;
 

@@ -6,7 +6,7 @@
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobInterstitialAdapter.h"
+#import "DIOInterstitialAdapter.h"
 
 #import <DIOSDK/DIOController.h>
 
@@ -14,13 +14,13 @@
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
-@interface DIOAdmobInterstitialAdapter () <GADCustomEventInterstitial>
+@interface DIOInterstitialAdapter () <GADCustomEventInterstitial>
 
 @property (nonatomic, strong) DIOAd *ad;
 
 @end
 
-@implementation DIOAdmobInterstitialAdapter
+@implementation DIOInterstitialAdapter
 
 @synthesize delegate;
 

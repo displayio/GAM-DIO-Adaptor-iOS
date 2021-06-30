@@ -13,7 +13,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DIOAdmobInterscrollerAdapter : NSObject
+@interface DIOInterscrollerAdapter : NSObject
 
 + (DIOInterscrollerView*)getInterscrollerViewForTableView:(GADBannerView*)bannerView withInterscrollerSize:(CGSize)interscrollerSize withBaseSize:(GADAdSize)baseSize;
 

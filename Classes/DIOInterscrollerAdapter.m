@@ -6,7 +6,7 @@
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobInterscrollerAdapter.h"
+#import "DIOInterscrollerAdapter.h"
 
 #import <DIOSDK/DIOController.h>
 #import <DIOSDK/DIOInterscrollerContainer.h>
@@ -15,11 +15,11 @@
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
-@interface DIOAdmobInterscrollerAdapter () <GADCustomEventBanner>
+@interface DIOInterscrollerAdapter () <GADCustomEventBanner>
 
 @end
 
-@implementation DIOAdmobInterscrollerAdapter
+@implementation DIOInterscrollerAdapter
 
 @synthesize delegate;
 
@@ -76,18 +76,31 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
 + (DIOInterscrollerView*)getInterscrollerViewForTableView:(GADBannerView*)bannerView withInterscrollerSize:(CGSize)interscrollerSize withBaseSize:(GADAdSize)baseSize {
     
-    DIOInterscrollerView *dioView = bannerView.subviews[0].subviews[0].subviews[0].subviews[0];
-    if (dioView != nil &&  [dioView isKindOfClass:[DIOInterscrollerView class]] ) {
-        bannerView.adSize = GADAdSizeFromCGSize(interscrollerSize);
-    } else {
-        bannerView.adSize = baseSize;
+    DIOInterscrollerView *dioView;
+    @try {
+         dioView = [[[[bannerView.subviews firstObject].subviews firstObject].subviews firstObject].subviews firstObject];
     }
+    @catch (NSException * e) {
+        return  nil;
+    }
+    
+//    if (dioView != nil &&  [dioView isKindOfClass:[DIOInterscrollerView class]] ) {
+//        bannerView.adSize = GADAdSizeFromCGSize(interscrollerSize);
+//    } else {
+//        bannerView.adSize = baseSize;
+//    }
     return dioView;
 }
 
 + (DIOInterscrollerView*)getInterscrollerViewForScrollView:(GADBannerView*)bannerView withInterscrollerSize:(CGSize)interscrollerSize withBaseSize:(GADAdSize)baseSize {
-    
-    DIOInterscrollerView *dioView = bannerView.subviews[0].subviews[0].subviews[0].subviews[0];
+    DIOInterscrollerView *dioView;
+    @try {
+         dioView = [[[[bannerView.subviews firstObject].subviews firstObject].subviews firstObject].subviews firstObject];
+    }
+    @catch (NSException * e) {
+        return  nil;
+    }
+   
     if (dioView != nil &&  [dioView isKindOfClass:[DIOInterscrollerView class]] ) {
         bannerView.adSize = GADAdSizeFromCGSize(interscrollerSize);
         [dioView setConstraintForScrollView];

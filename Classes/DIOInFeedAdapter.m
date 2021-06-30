@@ -6,7 +6,7 @@
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobInFeedAdapter.h"
+#import "DIOInFeedAdapter.h"
 
 #import <DIOSDK/DIOController.h>
 
@@ -14,11 +14,11 @@
 
 static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 
-@interface DIOAdmobInFeedAdapter () <GADCustomEventBanner>
+@interface DIOInFeedAdapter () <GADCustomEventBanner>
 
 @end
 
-@implementation DIOAdmobInFeedAdapter
+@implementation DIOInFeedAdapter
 
 @synthesize delegate;
 

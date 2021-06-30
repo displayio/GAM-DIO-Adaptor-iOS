@@ -1,8 +1,8 @@
 //
-//  DIOAdmobInFeedAdapter.h
+//  DIOAdmobMediumRectangleAdapter.h
 //  AdmobAdapterForiOS
 //
-//  Created by Ariel Malka on 7/16/19.
+//  Created by Ariel Malka on 12/17/19.
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DIOAdmobInFeedAdapter : NSObject
+@interface DIOMediumRectangleAdapter : NSObject
 
 @end
 

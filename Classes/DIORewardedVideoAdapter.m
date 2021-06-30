@@ -6,7 +6,7 @@
 //  Copyright © 2019 Display.io. All rights reserved.
 //
 
-#import "DIOAdmobRewardedVideoAdapter.h"
+#import "DIORewardedVideoAdapter.h"
 
 #import <DIOSDK/DIOController.h>
 
@@ -14,7 +14,7 @@ static NSString *const customEventErrorDomain = @"com.google.CustomEvent";
 static NSString *const versionString = @"4.5.1";
 
 
-@interface DIOAdmobRewardedVideoAdapter () <GADMediationAdapter>
+@interface DIORewardedVideoAdapter () <GADMediationAdapter>
 
 @property (nonatomic, strong) DIOAd *ad;
 @property (nonatomic, strong) NSString *placementID;
@@ -22,7 +22,7 @@ static NSString *const versionString = @"4.5.1";
 
 @end
 
-@implementation DIOAdmobRewardedVideoAdapter
+@implementation DIORewardedVideoAdapter
 
 + (GADVersionNumber)adapterVersion {
     NSArray *versionComponents = [versionString componentsSeparatedByString:@"."];
