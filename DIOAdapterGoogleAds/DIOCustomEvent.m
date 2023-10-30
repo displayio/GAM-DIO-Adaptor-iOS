@@ -68,7 +68,6 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
     
     [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
     NSString *parameter = adConfiguration.credentials.settings[@"parameter"];
-    NSLog(@"---------- PARAMS: %@ ----------", parameter);  //todo del after test
 
     id params = [NSJSONSerialization JSONObjectWithData:[parameter dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
     NSString* placementID = params[@"placementID"];
@@ -79,9 +78,7 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
     }
     
     DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:placementID];
-//        DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:@"4655"];  //todo test and delete, infeed
-//        DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:@"6429"];  //todo test and delete, mediumrect
-//        DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:@"6428"];  //todo test and delete, banner
+
     if (!placement) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInvalidArgument userInfo:nil];
         completionHandler(nil, error);
@@ -201,12 +198,6 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
     }];
 }
 
-- (void)requestDioInlineAd:(DIOPlacement *)placement params:(id) params
-         completionHandler:(GADMediationBannerLoadCompletionHandler)completionHandler {
-    
-  
-}
-
 #pragma mark GADMediationBannerAd implementation
 - (nonnull UIView *)view {
     return adView;
@@ -236,10 +227,10 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
                 [interstitialDelegate reportClick];
                 break;
             case DIOAdEventOnClosed:
+            case DIOAdEventOnAdCompleted:
                 [interstitialDelegate willDismissFullScreenView];
                 [interstitialDelegate didDismissFullScreenView];
                 break;
-            case DIOAdEventOnAdCompleted:
             case DIOAdEventOnSwipedOut:
             case DIOAdEventOnSnapped:
             case DIOAdEventOnMuted:
