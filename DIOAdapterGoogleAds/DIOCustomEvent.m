@@ -249,6 +249,8 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
             case DIOAdEventOnShown:
                 [inlineDelegate willPresentFullScreenView];
                 [inlineDelegate reportImpression];
+                [inlineDelegate willDismissFullScreenView];
+                [inlineDelegate didDismissFullScreenView];
                 break;
             case DIOAdEventOnFailedToShow:{
                 NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
@@ -259,9 +261,6 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
                 [inlineDelegate reportClick];
                 break;
             case DIOAdEventOnClosed:
-                [inlineDelegate willDismissFullScreenView];
-                [inlineDelegate didDismissFullScreenView];
-                break;
             case DIOAdEventOnAdCompleted:
             case DIOAdEventOnSwipedOut:
             case DIOAdEventOnSnapped:
