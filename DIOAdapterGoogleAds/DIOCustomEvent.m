@@ -15,16 +15,14 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
 
 @interface DIOCustomEvent () <GADMediationBannerAd, GADMediationInterstitialAd>
 
+@property(nonatomic, strong) id<GADMediationInterstitialAdEventDelegate> interstitialDelegate;
+@property(nonatomic, strong) id<GADMediationBannerAdEventDelegate> inlineDelegate;
+@property(nonatomic, strong) DIOAd *dioAd;
+@property(nonatomic, strong) UIView *adView;
+
 @end
 
 @implementation DIOCustomEvent
-DIOAd *dioAd;
-UIView *adView;
-
-
-id<GADMediationInterstitialAdEventDelegate> interstitialDelegate;
-id<GADMediationBannerAdEventDelegate> inlineDelegate;
-
 
 #pragma mark GADMediationAdapter implementation
 
@@ -92,7 +90,7 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
         
         if(topViewController == nil) {
             NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
-            inlineDelegate = completionHandler(nil, error);
+            self.inlineDelegate = completionHandler(nil, error);
             return;
         }
         
@@ -113,43 +111,43 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
         
         DIOInterscrollerContainer *container = [[DIOInterscrollerContainer alloc] init];
         [container loadWithAdRequest:request completionHandler:^(DIOAd *ad){
-            adView = [container view];
-            adView.frame = CGRectMake(0, 0,
+            self.adView = [container view];
+            self.adView.frame = CGRectMake(0, 0,
                                       topViewController.view.frame.size.width,
                                       topViewController.view.frame.size.height);
             
-            inlineDelegate = completionHandler(self, nil);
+            self.inlineDelegate = completionHandler(self, nil);
             [self handleInlineAdEvents:ad];
         } errorHandler:^(NSError *error) {
-            inlineDelegate = completionHandler(nil, error);
+            self.inlineDelegate = completionHandler(nil, error);
         }];
     } else if ([placement isKindOfClass: DIOHeadlinePlacement.class]){
         NSError *error = [NSError errorWithDomain:@"Headline ad unit is not supported" code:GADErrorInternalError userInfo:nil];
-        inlineDelegate = completionHandler(nil, error);
+        self.inlineDelegate = completionHandler(nil, error);
     } else if ([placement isKindOfClass: DIOInFeedPlacement.class]
                || [placement isKindOfClass: DIOMediumRectanglePlacement.class]
                || [placement isKindOfClass: DIOBannerPlacement.class]){
         [request requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
             [adProvider loadAdWithLoadedHandler:^(DIOAd *ad) {
-                adView = [ad view];
+                self.adView = [ad view];
                 if ([placement isKindOfClass: DIOBannerPlacement.class]){
-                    adView.frame = CGRectMake(0, 0, 320, 50);
+                    self.adView.frame = CGRectMake(0, 0, 320, 50);
                 }
                 if ([placement isKindOfClass: DIOMediumRectanglePlacement.class]
                      || [placement isKindOfClass: DIOInFeedPlacement.class]){
-                    adView.frame = CGRectMake(0, 0, 300, 250);
+                    self.adView.frame = CGRectMake(0, 0, 300, 250);
                 }
-                inlineDelegate = completionHandler(self, nil);
+                self.inlineDelegate = completionHandler(self, nil);
                 [self handleInlineAdEvents:ad];
             } failedHandler:^(NSError *error){
-                inlineDelegate = completionHandler(nil, error);
+                self.inlineDelegate = completionHandler(nil, error);
             }];
         } noAdHandler:^(NSError *error){
-            inlineDelegate = completionHandler(nil, error);
+            self.inlineDelegate = completionHandler(nil, error);
         }];
     } else {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
-        inlineDelegate = completionHandler(nil, error);
+        self.inlineDelegate = completionHandler(nil, error);
     }
 }
 
@@ -158,7 +156,7 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
 (GADMediationInterstitialAdConfiguration *)adConfiguration
                          completionHandler:
 (GADMediationInterstitialLoadCompletionHandler)completionHandler {
-    dioAd = nil;
+    self.dioAd = nil;
     if (![DIOController sharedInstance].initialized) {
         NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
         completionHandler(nil, error);
@@ -188,8 +186,8 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
     DIOAdRequest *request = [placement newAdRequest];
     [request requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
         [adProvider loadAdWithLoadedHandler:^(DIOAd *ad) {
-            dioAd = ad;
-            interstitialDelegate = completionHandler(self, nil);
+            self.dioAd = ad;
+            self.interstitialDelegate = completionHandler(self, nil);
         } failedHandler:^(NSError *error){
             completionHandler(nil, error);
         }];
@@ -200,36 +198,36 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
 
 #pragma mark GADMediationBannerAd implementation
 - (nonnull UIView *)view {
-    return adView;
+    return self.adView;
 }
 
 #pragma mark GADMediationInterstitialAd implementation
 - (void)presentFromViewController:(nonnull UIViewController *)viewController {
-    if(!dioAd) {
+    if(!self.dioAd) {
         return;
     }
-    [dioAd showAdFromViewController:viewController eventHandler:^(DIOAdEvent event){
-        if(interstitialDelegate == nil) {
+    [self.dioAd showAdFromViewController:viewController eventHandler:^(DIOAdEvent event){
+        if(self.interstitialDelegate == nil) {
             return;
         }
         
         switch (event) {
             case DIOAdEventOnShown:
-                [interstitialDelegate willPresentFullScreenView];
-                [interstitialDelegate reportImpression];
+                [self.interstitialDelegate willPresentFullScreenView];
+                [self.interstitialDelegate reportImpression];
                 break;
             case DIOAdEventOnFailedToShow:{
                 NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
-                [interstitialDelegate didFailToPresentWithError:error];
+                [self.interstitialDelegate didFailToPresentWithError:error];
                 break;
             }
             case DIOAdEventOnClicked:
-                [interstitialDelegate reportClick];
+                [self.interstitialDelegate reportClick];
                 break;
             case DIOAdEventOnClosed:
             case DIOAdEventOnAdCompleted:
-                [interstitialDelegate willDismissFullScreenView];
-                [interstitialDelegate didDismissFullScreenView];
+                [self.interstitialDelegate willDismissFullScreenView];
+                [self.interstitialDelegate didDismissFullScreenView];
                 break;
             case DIOAdEventOnSwipedOut:
             case DIOAdEventOnSnapped:
@@ -241,24 +239,24 @@ id<GADMediationBannerAdEventDelegate> inlineDelegate;
 }
 
 - (void)handleInlineAdEvents:(DIOAd *)ad {
-    if(ad == nil || inlineDelegate == nil) {
+    if(ad == nil || self.inlineDelegate == nil) {
         return;
     }
     [ad setEventHandler:^(DIOAdEvent event) {
         switch (event) {
             case DIOAdEventOnShown:
-                [inlineDelegate willPresentFullScreenView];
-                [inlineDelegate reportImpression];
-                [inlineDelegate willDismissFullScreenView];
-                [inlineDelegate didDismissFullScreenView];
+                [self.inlineDelegate willPresentFullScreenView];
+                [self.inlineDelegate reportImpression];
+                [self.inlineDelegate willDismissFullScreenView];
+                [self.inlineDelegate didDismissFullScreenView];
                 break;
             case DIOAdEventOnFailedToShow:{
                 NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
-                [inlineDelegate didFailToPresentWithError:error];
+                [self.inlineDelegate didFailToPresentWithError:error];
                 break;
             }
             case DIOAdEventOnClicked:
-                [inlineDelegate reportClick];
+                [self.inlineDelegate reportClick];
                 break;
             case DIOAdEventOnClosed:
             case DIOAdEventOnAdCompleted:
