@@ -11,7 +11,8 @@
 #include <stdatomic.h>
 
 
-static NSString *const customEventErrorDomain = @"DIOCustomEvent";
+static NSString *const PARAMETER = @"parameter";
+static NSString *const PLACEMENT_ID = @"placementID";
 
 @interface DIOCustomEvent () <GADMediationBannerAd, GADMediationInterstitialAd>
 
@@ -48,7 +49,7 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
 }
 
 + (nullable Class<GADAdNetworkExtras>)networkExtrasClass {
-    return Nil;
+    return DIOCustomEvent.class;
 }
 
 + (void)setUpWithConfiguration:(GADMediationServerConfiguration *)configuration
@@ -59,18 +60,17 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
 - (void)loadBannerForAdConfiguration:(GADMediationBannerAdConfiguration *)adConfiguration
                    completionHandler:(GADMediationBannerLoadCompletionHandler)completionHandler {
     if (![DIOController sharedInstance].initialized) {
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
+        NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInternalError userInfo:nil];
         completionHandler(nil, error);
         return;
     }
     
-    [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
-    NSString *parameter = adConfiguration.credentials.settings[@"parameter"];
+    NSString *parameter = adConfiguration.credentials.settings[PARAMETER];
 
     id params = [NSJSONSerialization JSONObjectWithData:[parameter dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-    NSString* placementID = params[@"placementID"];
+    NSString* placementID = params[PLACEMENT_ID];
     if (!placementID) {
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInvalidArgument userInfo:nil];
+        NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInvalidArgument userInfo:nil];
         completionHandler(nil, error);
         return;
     }
@@ -78,18 +78,35 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
     DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:placementID];
 
     if (!placement) {
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInvalidArgument userInfo:nil];
+        NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInvalidArgument userInfo:nil];
         completionHandler(nil, error);
         return;
     }
+
+    DIOAdRequest *request;
     
-    DIOAdRequest *request = [placement newAdRequest];
-    
+    @try {
+        GADCustomEventExtras* extras = adConfiguration.extras;
+        NSDictionary* dioCustomEvent = [extras extrasForLabel:DIO_CUSTOM_EVENT];
+        if (dioCustomEvent != nil) {
+            request = dioCustomEvent[DIO_AD_REQUEST];
+        }
+    } @catch (NSException *ignored) {
+        
+    }
+   
+    if (request == nil) {
+        request = [placement newAdRequest];
+    } else {
+        [placement addAdRequest:request];
+    }
+    [request setMediationPlatform:DIOMediationPlatformGAM];
+
     if([placement isKindOfClass: DIOInterscrollerPlacement.class]) {
         UIViewController *topViewController = adConfiguration.topViewController;
         
         if(topViewController == nil) {
-            NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
+            NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInternalError userInfo:nil];
             self.inlineDelegate = completionHandler(nil, error);
             return;
         }
@@ -127,26 +144,22 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
     } else if ([placement isKindOfClass: DIOInFeedPlacement.class]
                || [placement isKindOfClass: DIOMediumRectanglePlacement.class]
                || [placement isKindOfClass: DIOBannerPlacement.class]){
-        [request requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
-            [adProvider loadAdWithLoadedHandler:^(DIOAd *ad) {
-                self.adView = [ad view];
-                if ([placement isKindOfClass: DIOBannerPlacement.class]){
-                    self.adView.frame = CGRectMake(0, 0, 320, 50);
-                }
-                if ([placement isKindOfClass: DIOMediumRectanglePlacement.class]
-                     || [placement isKindOfClass: DIOInFeedPlacement.class]){
-                    self.adView.frame = CGRectMake(0, 0, 300, 250);
-                }
-                self.inlineDelegate = completionHandler(self, nil);
-                [self handleInlineAdEvents:ad];
-            } failedHandler:^(NSError *error){
-                self.inlineDelegate = completionHandler(nil, error);
-            }];
+        [request requestAdWithAdReceivedHandler:^(DIOAd *ad) {
+            self.adView = [ad view];
+            if ([placement isKindOfClass: DIOBannerPlacement.class]){
+                self.adView.frame = CGRectMake(0, 0, 320, 50);
+            }
+            if ([placement isKindOfClass: DIOMediumRectanglePlacement.class]
+                 || [placement isKindOfClass: DIOInFeedPlacement.class]){
+                self.adView.frame = CGRectMake(0, 0, 300, 250);
+            }
+            self.inlineDelegate = completionHandler(self, nil);
+            [self handleInlineAdEvents:ad];
         } noAdHandler:^(NSError *error){
             self.inlineDelegate = completionHandler(nil, error);
         }];
     } else {
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
+        NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInternalError userInfo:nil];
         self.inlineDelegate = completionHandler(nil, error);
     }
 }
@@ -158,19 +171,16 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
 (GADMediationInterstitialLoadCompletionHandler)completionHandler {
     self.dioAd = nil;
     if (![DIOController sharedInstance].initialized) {
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
+        NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInternalError userInfo:nil];
         completionHandler(nil, error);
         return;
     }
-    
-    [[DIOController sharedInstance] setMediationPlatform:DIOMediationPlatformAdmob];
-    
-    NSString *parameter = adConfiguration.credentials.settings[@"parameter"];
-    
+
+    NSString *parameter = adConfiguration.credentials.settings[PARAMETER];
     id params = [NSJSONSerialization JSONObjectWithData:[parameter dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-    NSString* placementID = params[@"placementID"];
+    NSString* placementID = params[PLACEMENT_ID];
     if (!placementID) {
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInvalidArgument userInfo:nil];
+        NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInvalidArgument userInfo:nil];
         completionHandler(nil, error);
         return;
     }
@@ -178,19 +188,32 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
     DIOPlacement *placement = [[DIOController sharedInstance] placementWithId:placementID];
     
     if (!placement) {
-        NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInvalidArgument userInfo:nil];
+        NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInvalidArgument userInfo:nil];
         completionHandler(nil, error);
         return;
     }
     
-    DIOAdRequest *request = [placement newAdRequest];
-    [request requestAdWithAdReceivedHandler:^(DIOAdProvider *adProvider) {
-        [adProvider loadAdWithLoadedHandler:^(DIOAd *ad) {
-            self.dioAd = ad;
-            self.interstitialDelegate = completionHandler(self, nil);
-        } failedHandler:^(NSError *error){
-            completionHandler(nil, error);
-        }];
+    DIOAdRequest *request;
+    
+    @try {
+        GADCustomEventExtras* extras = adConfiguration.extras;
+        NSDictionary* dioCustomEvent = [extras extrasForLabel:DIO_CUSTOM_EVENT];
+        if (dioCustomEvent != nil) {
+            request = dioCustomEvent[DIO_AD_REQUEST];
+        }
+    } @catch (NSException *ignored) {
+        
+    }
+   
+    if (request == nil) {
+        request = [placement newAdRequest];
+    } else {
+        [placement addAdRequest:request];
+    }
+    [request setMediationPlatform:DIOMediationPlatformGAM];
+    [request requestAdWithAdReceivedHandler:^(DIOAd *ad) {
+        self.dioAd = ad;
+        self.interstitialDelegate = completionHandler(self, nil);
     } noAdHandler:^(NSError *error){
         completionHandler(nil, error);
     }];
@@ -217,7 +240,7 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
                 [self.interstitialDelegate reportImpression];
                 break;
             case DIOAdEventOnFailedToShow:{
-                NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
+                NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInternalError userInfo:nil];
                 [self.interstitialDelegate didFailToPresentWithError:error];
                 break;
             }
@@ -251,7 +274,7 @@ static NSString *const customEventErrorDomain = @"DIOCustomEvent";
                 [self.inlineDelegate didDismissFullScreenView];
                 break;
             case DIOAdEventOnFailedToShow:{
-                NSError *error = [NSError errorWithDomain:customEventErrorDomain code:GADErrorInternalError userInfo:nil];
+                NSError *error = [NSError errorWithDomain:DIO_CUSTOM_EVENT code:GADErrorInternalError userInfo:nil];
                 [self.inlineDelegate didFailToPresentWithError:error];
                 break;
             }

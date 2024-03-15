@@ -11,7 +11,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DIOCustomEvent : NSObject <GADMediationAdapter>
+static NSString *const DIO_CUSTOM_EVENT = @"DIOCustomEvent";
+static NSString *const DIO_AD_REQUEST = @"dioAdRequest";
+
+@interface DIOCustomEvent : GADCustomEventExtras <GADMediationAdapter, GADAdNetworkExtras>
+
+
 
 @end
 
